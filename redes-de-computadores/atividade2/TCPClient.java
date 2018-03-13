@@ -9,6 +9,7 @@ public class TCPClient {
 		
 		// Connect to the server process running at host
 		Socket s = new Socket("127.0.0.1", 9000);
+    System.out.println("Porta Local: " + s.getLocalPort());    
 	
     // The next 2 lines create a output stream we can
 		// write to.  (To write TO SERVER)
