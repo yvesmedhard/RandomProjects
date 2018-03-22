@@ -1,76 +1,56 @@
-// package tcpsocket;
 import java.io.*;
 import java.net.*;
 
-class TCPServer {
-
-  public Server(Socket cliente){
-    this.cliente = cliente;
+public class TCPServer {
+  public static void main(String args[]) throws Exception {
+    TCPServer server = new TCPServer();
+    server.start_server();
   }
 
-  public Thread(Server tratamento){
-    
-  }
+  public int conexoes = 0;
 
-  public static void main (String args[]) throws Exception {
-    ServerSocket serverSocket = new ServerSocket(9000);
-    while (true) {
+  public void start_server() throws Exception {
+    ServerSocket servidor = new ServerSocket(9000);
+
+    System.out.println("Esperando conexões na porta 9000");
+    System.out.println("InetAddress:" + servidor.getInetAddress());
+
+    do {
       Socket cliente = servidor.accept();
-      Thread t = new Thread(cliente){
-        public void run() {
-        
-        }
-      }
-      
+      Thread comunication = new ThreadSocket(cliente, this);
+      comunication.start();
+      conexoes += 1;
+    } while (conexoes > 0);
+  }
 
+  class ThreadSocket extends Thread {
+    Socket client;
+    TCPServer server;
 
-      t.start();
+    ThreadSocket(Socket cliente, TCPServer server) {
+      this.client = cliente;
+      this.server = server;
     }
 
-    // waits for a new connection. Accepts connetion from multiple clients
-    while (close_conection) {
-      System.out.println("Esperando conexões na porta 9000");
-      
-      
-          Socket s = serverSocket.accept();
-          System.out.println("Conexão estabelecida de " + s.getInetAddress());
-          
-          String user_input = "";
-          do {
-            // create a BufferedReader object to read strings from
-            // the socket. (read strings FROM CLIENT)
-            BufferedReader br = new BufferedReader(new InputStreamReader(s.getInputStream()));
-            user_input = br.readLine();
-            
-            //create output stream to write to/send TO CLINET
-            DataOutputStream output = new DataOutputStream(s.getOutputStream());
-            String dataOutput = user_input.toUpperCase();
-            output.writeBytes( dataOutput + "\n");
-            System.out.println("Comunicando " + dataOutput + " pela porta: " + s.getPort());
-          } while(!user_input.equals("tchau"));
-          // close current connection
-          s.close();
-        }
-      }.start())
-    if(threads.count == 0)  {
-      close_conection = false;
+    public void run() {
+      try{
+        System.out.println("Conexão estabelecida de " + client.getInetAddress());
+        String user_input = "";
+        do {
+          BufferedReader br = new BufferedReader(new InputStreamReader(client.getInputStream()));
+          user_input = br.readLine();
+
+          DataOutputStream output = new DataOutputStream(client.getOutputStream());
+          String dataOutput = user_input.toUpperCase();
+
+          output.writeBytes( dataOutput + "\n");
+          System.out.println("Comunicando " + dataOutput + " pela porta: " + client.getPort());
+        } while(!user_input.equals("tchau"));
+        client.close();
+        this.server.conexoes -= 1;
+      } catch(Exception e){
+        System.out.println(e);
+      }
     }
   }
 }
-
-
-public Socket cliente;
-    
-
-    public static void main(String[] args)  throws IOException{     
-        //Cria um socket na porta 12345
-        System.out.println("Porta 12345 aberta!");
-        // Aguarda alguém se conectar. A execução do servidor
-        // fica bloqueada na chamada do método accept da classe
-        // ServerSocket. Quando alguém se conectar ao servidor, o
-        // método desbloqueia e retorna com um objeto da classe
-        // Socket, que é uma porta da comunicação.
-        System.out.println("Aguardando conexão do cliente...");   
-
-        
-    }
