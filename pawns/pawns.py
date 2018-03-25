@@ -258,10 +258,10 @@ class PawnsGame:
     while self.game_over != True:
       if self.player_turn:
         move = self.best_move(self.player, self.game_state)
+        move_string = self.get_move_string(self.player, move, self.game_state)
         self.set_game_state(move)
         self.player_turn = False
-      #  self.write_to_output(self.get_move_output(move))
-
+        print(move_string)
       else:
         move = self.read_input_move(1 - self.player, input())
         self.set_game_state(move)
@@ -306,10 +306,17 @@ class PawnsGame:
         win_moves.append(move)
     return random.choice(win_moves)
 
-# id = p.tabletop_set_id_from_columns_ids(3,3,3)
-# print(p.player_have_winner_strategy(0, id))
-# print(p.rival_has_winner_strategy(0,id))
-# p.print_possible_moves(0, id)
-# print("Best Strategies")
-# for strategy in  p.best_strategy(0, id):
-#   p.print_possible_moves(0, strategy)
+  def get_move_string(self, player, move, game_state):
+    for i in range(3):
+      if self.pawns.column_id(move, i) != self.pawns.column_id(game_state, i):
+        move_column_id = self.pawns.column_id(move, i)
+        game_state_column_id = self.pawns.column_id(game_state, i)
+        pawn_moves = None
+        if player:
+          pawn_moves = self.pawns.column_sets[player][game_state_column_id] - self.pawns.column_sets[player][move_column_id]
+        else:
+          pawn_moves = self.pawns.column_sets[player][move_column_id] - self.pawns.column_sets[player][game_state_column_id]
+
+        return f"{i + 1} {pawn_moves}"
+
+PawnsGame()
