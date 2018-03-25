@@ -1,3 +1,5 @@
+import random
+
 class Pawns:
   winner = {}
   def __init__(self):
@@ -255,14 +257,11 @@ class PawnsGame:
     self.pawns.print_tabletop_set(self.game_state)
     while self.game_over != True:
       if self.player_turn:
-        # move = self.best_move(player, state)
-        # self.set_game_state(move)
-        # self.player_turn = False
-        # self.write_to_output(self.get_move_output(move))
-
-        move = self.read_input_move(self.player, input())
+        move = self.best_move(self.player, self.game_state)
         self.set_game_state(move)
         self.player_turn = False
+      #  self.write_to_output(self.get_move_output(move))
+
       else:
         move = self.read_input_move(1 - self.player, input())
         self.set_game_state(move)
@@ -297,8 +296,15 @@ class PawnsGame:
     else:
       return self.pawns.column_set_ids[pawns_placement_0 + pawn_moves][pawns_placement_1]
 
-
-
+  def best_move(self, player, tabletop_id):
+    win_moves = []
+    loose_moves = []
+    for move in self.pawns.possible_moves(player, tabletop_id):
+      if self.pawns.winner[(1 - player, move)] == 2:
+        loose_moves.append(move)
+      else:
+        win_moves.append(move)
+    return random.choice(win_moves)
 
 # id = p.tabletop_set_id_from_columns_ids(3,3,3)
 # print(p.player_have_winner_strategy(0, id))
