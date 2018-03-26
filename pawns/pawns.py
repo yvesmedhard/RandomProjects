@@ -367,6 +367,6 @@ class PawnsGame:
         else:
           pawn_moves = self.pawns.column_sets[player][move_column_id] - self.pawns.column_sets[player][game_state_column_id]
 
-        return f"{i + 1} {pawn_moves}"
+        return "{} {}".format(i + 1, pawn_moves)
 
 PawnsGame()
