@@ -190,8 +190,8 @@ class Pawns:
         if not (player, tabletop_id) in self.winner.keys():
           self.wins(player, tabletop_id)
 
-  def player_have_winner_strategy(self, player, tabltop_id):
-    return self.winner[(player, tabltop_id)] == 3
+  def player_have_winner_strategy(self, player, tabletop_id):
+    return self.winner[(player, tabletop_id)] == 3
 
   def rival_has_winner_strategy(self, player, state):
     valid_moves = self.tabletop_graph[player][state]
@@ -207,6 +207,7 @@ class Pawns:
       valid_moves = self.tabletop_graph[player][self.tabletop_set_id_from_columns_ids(*id)]
     else:
       valid_moves = self.tabletop_graph[player][id]
+    if id in valid_moves : valid_moves.remove(id)
     return valid_moves
 
   def print_possible_moves(self, player, id):
@@ -244,7 +245,6 @@ class PawnsGame:
     self.game_loop()
 
   def set_placement(self):
-    print("comece")
     placement = input()
     if placement == "primeiro":
       self.player = 0
@@ -254,10 +254,11 @@ class PawnsGame:
       self.player_turn = False
 
   def game_loop(self):
-    self.pawns.print_tabletop_set(self.game_state)
+    # self.pawns.print_tabletop_set(self.game_state)
     while self.game_over != True:
       if self.player_turn:
-        move = self.best_move(self.player, self.game_state)
+        move = self.random_move(self.player, self.game_state)
+        # move = self.best_move(self.player, self.game_state)
         move_string = self.get_move_string(self.player, move, self.game_state)
         self.set_game_state(move)
         self.player_turn = False
@@ -268,7 +269,7 @@ class PawnsGame:
         self.player_turn = True
 
       self.game_over = self.pawns.tabletop_set_status(self.game_state) > 0
-      self.pawns.print_tabletop_set(self.game_state)
+      # self.pawns.print_tabletop_set(self.game_state)
 
   def set_game_state(self, move):
     self.game_state = move
@@ -296,15 +297,64 @@ class PawnsGame:
     else:
       return self.pawns.column_set_ids[pawns_placement_0 + pawn_moves][pawns_placement_1]
 
-  def best_move(self, player, tabletop_id):
-    win_moves = []
-    loose_moves = []
-    for move in self.pawns.possible_moves(player, tabletop_id):
+  # alternativa para entregar o exercício :/
+  def random_move(self, player, tabletop_id):
+    winner_moves = []
+    possible_moves = self.pawns.possible_moves(player, tabletop_id)
+    for move in possible_moves:
       if self.pawns.winner[(1 - player, move)] == 2:
-        loose_moves.append(move)
-      else:
-        win_moves.append(move)
-    return random.choice(win_moves)
+        winner_moves.append(move)
+
+    return random.choice(winner_moves)
+
+  # Alguma coisa não dá certo na recursão de descobrir em profundidade as possiveis jogadas. o resultado é sempre 0
+  # para o status do game.
+  def best_move(self, player, tabletop_id):
+    winner_moves = []
+    possible_moves = self.pawns.possible_moves(player, tabletop_id)
+    explored = []
+    for move in possible_moves:
+      result = self.winner_move(player, move, 0, explored)
+      winner_moves.append(result)
+      explored = list(set(explored).union(result[2]))
+
+    move_id = None
+    move_distance = 8001
+    for move in winner_moves:
+      if 0 <= move[1] and move[1] < move_distance:
+        move_distance = move[1]
+        move_id = move[0]
+    return move_id
+
+  def winner_move(self, player, tabletop_id, depth_level, explored):
+    if len(explored) > 0 and tabletop_id in explored:
+      return [tabletop_id, -1, explored]
+    else:
+      explored.append(tabletop_id)
+
+    status = self.pawns.tabletop_set_status(tabletop_id)
+    print(tabletop_id, depth_level, status, player)
+    if status == player + 1:
+      return [tabletop_id, 0, explored]
+    elif status == 1 - player + 1:
+      return [tabletop_id, -1, explored]
+    else:
+      next_moves = []
+      possible_moves = self.pawns.possible_moves(1 - player, tabletop_id)
+      possible_moves = list(set(possible_moves) - set(explored))
+      if len(possible_moves) == 0 : return [tabletop_id, -1, explored]
+      for move in possible_moves:
+        result = self.winner_move(player, move, depth_level + 1, explored)
+        next_moves.append(result)
+        explored = list(set(explored).union(result[2]))
+
+      move_id = None
+      move_distance = 8001
+      for move in next_moves:
+        if 0 <= move[1] and move[1] < move_distance:
+          move_distance = move[1]
+          move_id = tabletop_id
+      return [move_id, move_distance + 1, explored]
 
   def get_move_string(self, player, move, game_state):
     for i in range(3):
